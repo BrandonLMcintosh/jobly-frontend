@@ -1,49 +1,63 @@
 import { Switch, Route, Redirect } from "react-router-dom";
 import React, { useContext } from "react";
-
 import Landing from "./Landing";
 import JobList from "./JobList";
 import CompanyDetail from "./CompanyDetail";
 import CompanyList from "./CompanyList";
-import Form from "./Form";
-import Context from "./Context";
+import FormSignup from "./FormSignup";
+import FormLogin from "./FormLogin";
+import FormProfile from "./FormProfile";
+import UserContext from "./UserContext";
 
-function Routes() {
-	const { auth } = useContext(Context);
+function AuthRoute({ exact, path, children }) {
+	const { user } = useContext(UserContext);
+
+	if (!user) {
+		return <Redirect to="/login" />;
+	}
+
 	return (
-		<Switch>
-			<Route exact path="/">
-				<Landing />
-			</Route>
-			<Route exact path="/companies">
-				<CompanyList />
-			</Route>
-			<Route path="/companies/:handle">
-				<CompanyDetail />
-			</Route>
-			<Route exact path="/jobs">
-				<JobList />
-			</Route>
-			<Route exact path="/profile">
-				<Form
-					initialFormState={auth.init.update}
-					action={auth.update}
-				/>
-			</Route>
-			<Route exact path="/login">
-				<Form
-					initialFormState={auth.init.login}
-					action={auth.login}
-				/>
-			</Route>
-			<Route exact path="/signup">
-				<Form
-					initialFormState={auth.init.signup}
-					action={auth.signup}
-				/>
-			</Route>
-			<Redirect to="/" />
-		</Switch>
+		<Route exact={exact} path={path}>
+			{children}
+		</Route>
+	);
+}
+
+function Routes({ signup, login }) {
+	return (
+		<div>
+			<Switch>
+				<Route exact path="/">
+					<Landing />
+				</Route>
+
+				<Route path="/login">
+					<FormLogin login={login} />
+				</Route>
+
+				<Route path="/signup">
+					<FormSignup signup={signup} />
+				</Route>
+
+				<AuthRoute exact path="/companies">
+					<CompanyList />
+				</AuthRoute>
+
+				<AuthRoute path="/companies/:handle">
+					<CompanyDetail />
+				</AuthRoute>
+
+				<AuthRoute path="/jobs">
+					<JobList />
+				</AuthRoute>
+
+				<AuthRoute path="/profile">
+					<FormProfile />
+				</AuthRoute>
+
+				<Redirect to="/" />
+			</Switch>
+		</div>
 	);
 }
 

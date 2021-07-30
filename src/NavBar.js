@@ -1,16 +1,52 @@
-import React from "react";
-import { Navbar, NavbarBrand } from "reactstrap";
+import React, { useContext } from "react";
+import { Nav, Navbar, NavbarBrand, NavItem } from "reactstrap";
+import { NavLink, Link } from "react-router-dom";
+import UserContext from "./UserContext";
 
-import NavBarUnauth from "./NavBarUnauth";
-import NavBarAuth from "./NavBarAuth";
+function NavBar({ logout }) {
+	const { user } = useContext(UserContext);
 
-function NavBar() {
-	const user = localStorage.getItem("user");
+	function loggedIn() {
+		return (
+			<Nav>
+				<NavItem>
+					<NavLink to="/companies">Companies</NavLink>
+				</NavItem>
+				<NavItem>
+					<NavLink to="/jobs">Jobs</NavLink>
+				</NavItem>
+				<NavItem>
+					<NavLink to="/profile">Profile</NavLink>
+				</NavItem>
+				<NavItem>
+					<NavLink to="/" onClick={logout}>
+						Logout {user.firstName || user.username}
+					</NavLink>
+				</NavItem>
+			</Nav>
+		);
+	}
+
+	function loggedOut() {
+		return (
+			<Nav>
+				<NavItem>
+					<NavLink to="/login">Login</NavLink>
+				</NavItem>
+				<NavItem>
+					<NavLink to="/signup">Signup</NavLink>
+				</NavItem>
+			</Nav>
+		);
+	}
+
 	return (
 		<div>
 			<Navbar>
-				<NavbarBrand href="/">Jobly</NavbarBrand>
-				{user ? <NavBarAuth user={user} /> : <NavBarUnauth />}
+				<NavbarBrand>
+					<Link to="/">Jobly</Link>
+				</NavbarBrand>
+				{user ? loggedIn() : loggedOut()}
 			</Navbar>
 		</div>
 	);

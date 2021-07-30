@@ -37,8 +37,8 @@ class JoblyApi {
 
 	/** Get details on a company by handle. */
 
-	static async companiesGetAll() {
-		let res = await this.request(`companies/`);
+	static async companiesGetAll(name) {
+		let res = await this.request(`companies/`, { name });
 		return res.companies;
 	}
 
@@ -47,8 +47,8 @@ class JoblyApi {
 		return res.company;
 	}
 
-	static async jobsGetAll() {
-		let res = await this.request(`jobs/`);
+	static async jobsGetAll(title) {
+		let res = await this.request(`jobs/`, { title });
 		return res.jobs;
 	}
 
@@ -63,17 +63,17 @@ class JoblyApi {
 			{ username, password },
 			"post"
 		);
-		this.updateToken(res.token);
-		let userRes = await this.userGet(username);
-		return userRes.user;
+		return res.token;
 	}
 
 	static async authSignup(data) {
 		const { username, password } = data;
-		let res = await this.request(`auth/register`, data, "post");
-		this.updateToken(res.token);
-		const userRes = await this.authLogin(username, password);
-		return userRes.user;
+		let res = await this.request(
+			`auth/register`,
+			{ username, password },
+			"post"
+		);
+		return res.token;
 	}
 
 	static authLogout() {
@@ -81,38 +81,24 @@ class JoblyApi {
 		localStorage.clear();
 	}
 
-	static async userGet(username) {
+	static async userGetCurrent(username) {
 		let res = await this.request(`user/${username}`);
 		return res.user;
 	}
-	static async userUpdate(data) {
-		let res = await this.request(`user/`, data, "patch");
+	static async userUpdate(username, data) {
+		const { firstName, lastName, email, password } = data;
+		const profileData = { firstName, lastName, email, password };
+		let res = await this.request(
+			`user/${username}`,
+			profileData,
+			"patch"
+		);
 		return res.user;
 	}
 
 	static async userApplyJob(username, id) {
-		let res = await this.request(`users/${username}/jobs/${id}`);
-		return res.applied;
-	}
-
-	static async userDelete(username) {
-		let res = await this.request(`users/${username}`, {}, "delete");
-		return res.deleted;
-	}
-
-	static updateToken(token = null) {
-		if (token) {
-			sessionStorage.setItem("token", token);
-		}
-		this.token = sessionStorage.getItem("token");
+		await this.request(`users/${username}/jobs/${id}`, {}, "post");
 	}
 }
-
-// for now, put token ("testuser" / "password" on class)
-JoblyApi.token =
-	sessionStorage.getItem("token") |
-	("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZ" +
-		"SI6InRlc3R1c2VyIiwiaXNBZG1pbiI6ZmFsc2UsImlhdCI6MTU5ODE1OTI1OX0." +
-		"FtrMwBQwe6Ue-glIFgz_Nf8XxRT2YecFCiSpYL0fCXc");
 
 export default JoblyApi;

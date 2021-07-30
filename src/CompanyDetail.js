@@ -1,31 +1,32 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import JoblyApi from "./api";
-import JobCard from "./JobCard";
+import JobList from "./JobList";
+import Loading from "./Loading";
 
 function CompanyDetail() {
 	const { handle } = useParams();
 	const [company, setCompany] = useState(null);
 
 	useEffect(() => {
-		async function getDetails(handle) {
+		async function getDetails() {
 			try {
-				const res = await JoblyApi.companiesGetOne(handle);
-				setCompany(res.company);
+				const company = await JoblyApi.companiesGetOne(handle);
+				setCompany(company);
 			} catch (err) {
 				console.error(err);
 			}
 		}
-		getDetails(handle);
+		getDetails();
 	}, [handle]);
+
+	if (!company) return <Loading />;
 
 	return (
 		<div>
 			<h2>{company.name}</h2>
 			<p>{company.description}</p>
-			{company.jobs.map((job) => (
-				<JobCard job={job} key={job.id} />
-			))}
+			<JobList jobs={company.jobs} />
 		</div>
 	);
 }

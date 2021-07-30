@@ -1,15 +1,18 @@
 import React from "react";
 import { Card, CardBody, CardTitle, CardText } from "reactstrap";
+import { Link } from "react-router-dom";
 
-function CompanyCard({ company, getDetails }) {
+function CompanyCard({ name, description, logoUrl, handle }) {
 	return (
-		<Card onClick={async () => getDetails()}>
-			<CardBody>
-				<CardTitle tag="h5">{company.name}</CardTitle>
-				<img src={company.logoUrl} alt={company.name}></img>
-				<CardText>{company.description}</CardText>
-			</CardBody>
-		</Card>
+		<Link to={`/companies/${handle}`}>
+			<Card>
+				<CardBody>
+					<CardTitle tag="h5">{name}</CardTitle>
+					<img src={logoUrl} alt={name}></img>
+					<CardText>{description}</CardText>
+				</CardBody>
+			</Card>
+		</Link>
 	);
 }
 

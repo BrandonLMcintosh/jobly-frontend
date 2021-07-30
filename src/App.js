@@ -1,78 +1,89 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { BrowserRouter } from "react-router-dom";
-
-import NavBar from "./NavBar";
-import Body from "./Body";
-
+import Routes from "./Routes";
 import JoblyApi from "./api";
-import Context from "./Context";
-import useUser from "./hooks/useUser";
-import { useHistory } from "react-router-dom";
-
+import useToken from "./hooks/useToken";
 import "./App.css";
+import jwt from "jsonwebtoken";
+import UserContext from "./UserContext";
+import Loading from "./Loading";
+import NavBar from "./NavBar";
 
 function App() {
-	const [user, setUser] = useUser(null);
-	const history = useHistory();
+	const [loaded, setLoaded] = useState(false);
+	const [applications, setApplications] = useState(new Set([]));
+	const [user, setUser] = useState(null);
+	const [token, setToken] = useToken();
 
-	async function login(data) {
-		const { username, password } = data;
-		try {
-			const user = await JoblyApi.authLogin(username, password);
-			setUser(user);
-			history.push("/jobs");
-		} catch (err) {
-			console.log(err);
+	useEffect(() => {
+		async function getUser() {
+			if (token) {
+				try {
+					let { username } = jwt.decode(token);
+					let user = await JoblyApi.userGet(username);
+					setUser(user);
+					setApplications(new Set([user.applications]));
+				} catch (err) {
+					console.error("Issues loading user");
+					setUser(null);
+				}
+			}
+			setLoaded(true);
 		}
-	}
+
+		setLoaded(false);
+		getUser();
+	}, [token]);
 
 	async function signup(data) {
 		try {
-			const res = await JoblyApi.authSignup(data);
-			sessionStorage.setItem("token", res.token);
-			await login(data.username, data.password);
-			history.push("/jobs");
+			const token = await JoblyApi.authSignup(data);
+			setToken(token);
+			return { success: true };
 		} catch (err) {
-			console.log(err);
+			console.error("failed signup", err);
+			return { success: false, err };
 		}
 	}
 
-	async function update(data) {
+	async function login(data) {
 		try {
-			const res = await JoblyApi.userUpdate(data);
-			setUser(res.user);
-			history.push("/jobs");
+			let token = await JoblyApi.authLogin(data);
+			setToken(token);
+			return { success: true };
 		} catch (err) {
-			console.log(err);
+			console.error("failed login", err);
+			return { success: false, err };
 		}
 	}
 
-	const init = {
-		login: { username: "", password: "" },
-		signup: {
-			username: "",
-			password: "",
-			firstName: "",
-			lastName: "",
-			email: "",
-		},
-		update: {
-			firstName: user.firstName,
-			lastName: user.lastName,
-			email: user.email,
-			password: "",
-		},
-	};
+	function logout() {
+		setUser(null);
+		setToken(null);
+	}
 
-	const auth = { login, signup, update, init };
+	function appliedToJob(id) {
+		return applications.has(id);
+	}
+
+	function applyToJob(id) {
+		if (appliedToJob(id)) return;
+		JoblyApi.userApplyJob(user.username, id);
+		setApplications(new Set([...applications, id]));
+	}
+
+	if (!loaded) return <Loading />;
+
 	return (
 		<BrowserRouter>
-			<Context.Provider value={auth}>
+			<UserContext.Provider
+				value={{ user, setUser, appliedToJob, applyToJob }}
+			>
 				<div className="App">
-					<NavBar />
-					<Body />
+					<NavBar logout={logout} />
+					<Routes login={login} signup={signup} />
 				</div>
-			</Context.Provider>
+			</UserContext.Provider>
 		</BrowserRouter>
 	);
 }

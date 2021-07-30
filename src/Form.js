@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Form, FormGroup, Label, Input, Button } from "reactstrap";
 
 function LoginForm({ initialFormState, action }) {
-	const [formData, setFormData] = useState();
+	const [formData, setFormData] = useState(initialFormState);
 	function handleChange(evt) {
 		const { name, value } = evt.target;
 		setFormData((formData) => ({
@@ -19,7 +19,7 @@ function LoginForm({ initialFormState, action }) {
 
 	return (
 		<Form>
-			{formData.keys().map((key) => (
+			{Object.keys(formData).map((key) => (
 				<FormGroup>
 					<Label to={key}>{key}</Label>
 					<Input

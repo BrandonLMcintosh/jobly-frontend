@@ -1,18 +1,36 @@
-import React from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Card, CardBody, CardTitle, CardText, Button } from "reactstrap";
-import useApply from "./hooks/useApply";
+import UserContext from "./UserContext";
 
 function JobCard({ job }) {
-	const setId = useApply();
+	const { id, title, salary, equity, companyName } = job;
+	const { appliedToJob, applyToJob } = useContext(UserContext);
+	const [applied, setApplied] = useState();
+
+	useEffect(() => {
+		setApplied(appliedToJob(id));
+	}, [id, appliedToJob]);
+
+	async function handleApply() {
+		if (appliedToJob(id)) return;
+		applyToJob(id);
+		setApplied(true);
+	}
+
 	return (
-		<Card>
+		<Card id={job.id}>
 			<CardBody>
-				<CardTitle>{job.title}</CardTitle>
+				<CardTitle>{title}</CardTitle>
 				<CardText>
-					<p>Salary: {job.salary}</p>
-					<p>Equity: {job.equity | ""}</p>
+					<p>{companyName}</p>
+					<p>Salary: {salary}</p>
+					<p>Equity: {equity | ""}</p>
 				</CardText>
-				<Button id={job.id} onClick={() => setId(job.id)}>
+				<Button
+					id={job.id}
+					onClick={handleApply}
+					disabled={applied}
+				>
 					Apply
 				</Button>
 			</CardBody>
